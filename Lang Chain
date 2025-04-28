@@ -1,2 +1,24 @@
+!pip install langchain langchain-openai python-dotenv
+import os
+os.environ["OPENAI_API_KEY"] = .....
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(
+    model_name="gpt-3.5-turbo",   
+    temperature=0.7,              
+    max_tokens=500,               
+    verbose=True                  
+)
 
-
+response = llm.invoke("Hello, how are you?")
+print(response.content)
+responses = llm.batch([
+    "Hello, how are you?",
+    "Write a poem about AI."
+])
+#Send multiple messages at once (batch)
+for idx, resp in enumerate(responses):
+    print(f"Response {idx+1}: {resp.content}\n")
+response = llm.stream("Write a poem about AI")
+#Receive a streaming response (stream)
+for chunk in response:
+    print(chunk.content, end='', flush=True)

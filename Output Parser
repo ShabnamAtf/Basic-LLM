@@ -1,0 +1,91 @@
+!pip install langchain langchain-openai python-dotenv
+!pip install -U langchain langchain-openai
+!pip install langchain openai
+!pip uninstall -y langchain
+!pip uninstall -y langchain
+!pip install langchain openai
+import langchain
+print(langchain.__version__)
+
+!pip install --upgrade langchain==0.3.24 langchain-openai pydantic
+
+
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.output_parsers.list import CommaSeparatedListOutputParser
+from langchain_core.output_parsers.json import JsonOutputParser
+from pydantic import BaseModel, Field
+import os
+
+
+os.environ["OPENAI_API_KEY"] = "Your AP"
+model = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0.7)
+
+
+
+def call_string_output_parser():
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Tell me a joke about the following subject"),
+        ("human", "{input}")
+    ])
+    parser = StrOutputParser()
+    chain = prompt | model | parser
+    return chain.invoke({"input": "dog"})
+
+print(call_string_output_parser(), type(call_string_output_parser()))
+
+
+
+def call_list_output_parser():
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Generate a list of 10 synonyms for the following word. Return as comma-separated."),
+        ("human", "{input}")
+    ])
+    parser = CommaSeparatedListOutputParser()
+    chain = prompt | model | parser
+    return chain.invoke({"input": "happy"})
+
+print(call_list_output_parser(), type(call_list_output_parser()))
+
+
+
+def call_json_output_parser():
+    class Person(BaseModel):
+        name: str = Field(description="The name of the person")
+        age: int = Field(description="The age of the person")
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Extract info from the phrase. {format_instructions}"),
+        ("human", "{phrase}")
+    ])
+    parser = JsonOutputParser(pydantic_object=Person)
+    chain = prompt | model | parser
+
+    return chain.invoke({
+        "phrase": "Max is 30 years old",
+        "format_instructions": parser.get_format_instructions()
+    })
+
+print(call_json_output_parser(), type(call_json_output_parser()))
+
+
+
+def call_recipe_json_output_parser():
+    class Recipe(BaseModel):
+        recipe: str = Field(description="The name of the recipe")
+        ingredients: list = Field(description="List of ingredients")
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "Extract recipe info. {format_instructions}"),
+        ("human", "{phrase}")
+    ])
+    parser = JsonOutputParser(pydantic_object=Recipe)
+    chain = prompt | model | parser
+
+    return chain.invoke({
+        "phrase": "The ingredients for a margarita pizza are tomatoes, onions, cheese, basil and whatever else.",
+        "format_instructions": parser.get_format_instructions()
+    })
+
+print(call_recipe_json_output_parser(), type(call_recipe_json_output_parser()))
